@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,9 +11,9 @@ typedef struct s_token
     char *value;
     char *type;
     struct s_token *next;
-}   t_token;
+} t_token;
 
-void    create_token(t_token **token, char *value, char *type)
+void create_token(t_token **token, char *value, char *type)
 {
     t_token *new;
     t_token *temp;
@@ -22,8 +21,8 @@ void    create_token(t_token **token, char *value, char *type)
     new = malloc(sizeof(t_token));
     if (!new)
         return;
-    new->value = ft_strdup(value);
-    new->type = ft_strdup(type);
+    new->value = strdup(value);
+    new->type = strdup(type);
     new->next = NULL;
 
     if (!*token)
@@ -36,16 +35,17 @@ void    create_token(t_token **token, char *value, char *type)
         temp->next = new;
     }
 }
-void    error(char *str, char *line, char **array)
+
+void error(char *str, char *line, char **array)
 {
-    int     i;
+    int i;
 
     i = 0;
-    if(line)
+    if (line)
         free(line);
-    if(array)
+    if (array)
     {
-        while(array[i])
+        while (array[i])
         {
             free(array[i]);
             i++;
@@ -56,56 +56,56 @@ void    error(char *str, char *line, char **array)
     exit(1);
 }
 
-int     count_words(char *line)
+int count_words(char *line)
 {
-    int     i;
-    int     words;
+    int i;
+    int words;
 
     i = 0;
-    while(isspace(line[i]))
+    while (isspace(line[i]))
         i++;
-    if(!line[i])
-        error("Command not found", line , NULL); //handle empty line right here !
+    if (!line[i])
+        error("Command not found", line, NULL); // handle empty line right here!
     words = 1;
-    while(line[i])
+    while (line[i])
     {
-        if(isspace(line[i]))
+        if (isspace(line[i]))
         {
             words++;
-            while(isspace(line[i]))
+            while (isspace(line[i]))
                 i++;
         }
-        if(line[i] == '\'' || line[i] == '\"')
+        if (line[i] == '\'' || line[i] == '\"')
         {
-            while(line[i] != '\'' && line[i] != '\"')
+            while (line[i] != '\'' && line[i] != '\"')
                 i++;
         }
         i++;
     }
-    return(words);
+    return (words);
 }
 
-void    handle_quotes(char *line)
+void handle_quotes(char *line) //norm (26 lines)
 {
-    int     i;
-    char    flag;
+    int i;
+    char flag;
 
     i = 0;
     flag = 1;
     while (line[i])
     {
-        if(line[i] == '\'' || line[i] == '\"')
+        if (line[i] == '\'' || line[i] == '\"')
         {
             flag = line[i];
-            while(line[i])
+            while (line[i])
             {
                 i++;
-                if(line[i] == flag)
+                if (line[i] == flag)
                 {
                     flag = 1;
                     break;
                 }
-                if(line[i] == '\\')
+                if (line[i] == '\\')
                     i++;
             }
         }
@@ -115,88 +115,88 @@ void    handle_quotes(char *line)
         error("Command not found", line, NULL);
 }
 
-int     count_currect_word(char *line, int  i)
+int count_current_word(char *line, int i)
 {
-    int     count;
+    int count;
 
     count = 0;
-    while(line[i] && !isspace(line[i]))
+    while (line[i] && !isspace(line[i]))
     {
         i++;
         count++;
     }
-    return(count);
+    return (count);
 }
 
-int     quotes_handler(char *line, int i)
+int quotes_handler(char *line, int i)
 {
-    while(line[i])
+    while (line[i])
     {
-        if(line[i] == '\'' || line[i] == '\"')
-            return(++i);
-        if(line[i] == '\\')
+        if (line[i] == '\'' || line[i] == '\"')
+            return (++i);
+        if (line[i] == '\\')
             i++;
         i++;
     }
-    return(0);
+    return (0);
 }
 
-char    **split_line(char   *line, char **array)
+char **split_line(char *line, char **array)
 {
-    int     i;
-    int     j;
+    int i = 0;
+    int j = 0;
 
-    i = 0;
-    j = 0;
     while (line[i])
     {
-        if(!isspace(line[i]))
+        if (!isspace(line[i]))
         {
-            if(line[i] == '\"' || line[i] == '\'')
+            if (line[i] == '\"' || line[i] == '\'')
                 i = quotes_handler(line, i);
-            array[j] = malloc(count_currect_word(line, i) + 1);
-            if(!array[j])
+
+            int word_len = count_current_word(line, i);
+            array[j] = malloc(word_len + 1);
+            if (!array[j])
                 error("malloc failed", line, array);
-            if (array[j]) { //remove?
-        
-                array[j][count_currect_word(line, i)] = '\0';
-                j++;
-                }
+
+            strncpy(array[j], &line[i], word_len);
+            array[j][word_len] = '\0';
+            j++;
+            i += word_len;
         }
         i++;
     }
     array[j] = NULL;
-    return(array);
+    return (array);
 }
 
-int     check_command(char *word)
+int check_command(char *word)
 {
-    if(ft_strcmp(word, "echo") == 0 || ft_strcmp(word, "cd") == 0 ||
-        ft_strcmp(word, "pwd") == 0 || ft_strcmp(word, "export") == 0 ||
-        ft_strcmp(word, "unset") == 0 || ft_strcmp(word, "env") == 0 ||
-        ft_strcmp(word, "exit") == 0)
-        return(1);
-    return(0);
+    if (strcmp(word, "echo") == 0 || strcmp(word, "cd") == 0 ||
+        strcmp(word, "pwd") == 0 || strcmp(word, "export") == 0 ||
+        strcmp(word, "unset") == 0 || strcmp(word, "env") == 0 ||
+        strcmp(word, "exit") == 0)
+        return (1);
+    return (0);
 }
 
-void    tokenize(char **array, t_token **token)
+void tokenize(char **array, t_token **token)
 {
-    int     i;
+    int i;
 
     i = 0;
     while (array[i])
     {
         if (check_command(array[i]))
             create_token(token, array[i], "built in");
-        if (ft_strcmp(array[i], "|") == 0)
+        else if (strcmp(array[i], "|") == 0)
             create_token(token, "|", "pipe");
-        else if (ft_strcmp(array[i], "<") == 0)
+        else if (strcmp(array[i], "<") == 0)
             create_token(token, array[++i], "redirect input");
-        else if (ft_strcmp(array[i], ">") == 0)
+        else if (strcmp(array[i], ">") == 0)
             create_token(token, array[++i], "redirect output");
-        else if (ft_strcmp(array[i], ">>") == 0)
+        else if (strcmp(array[i], ">>") == 0)
             create_token(token, array[++i], "append output");
-        else if (ft_strcmp(array[i], "<<") == 0)
+        else if (strcmp(array[i], "<<") == 0)
             create_token(token, array[++i], "here-document");
         else
             create_token(token, array[i], "word");
@@ -204,23 +204,25 @@ void    tokenize(char **array, t_token **token)
     }
 }
 
-void    tokenizer(char *line, t_token **token)
+void tokenizer(char *line, t_token **token)
 {
-    char    **array;
-    int     words;
-    int     i;
+    char **array;
+    int words;
+    int i;
 
     words = 0;
     i = 0;
     handle_quotes(line);
     words = count_words(line);
     array = malloc(sizeof(char *) * (words + 1));
-    if(!array)
-        exit(1); // 1 or 0 ?
+    if (!array)
+    {
+        free(line);
+        exit(1);
+    }
     array = split_line(line, array);
-    //check_input(array);
     tokenize(array, token);
-    while(array[i])
+    while (array[i])
     {
         free(array[i]);
         i++;
