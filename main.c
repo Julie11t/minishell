@@ -21,8 +21,8 @@ void create_token(t_token **token, char *value, char *type)
     new = malloc(sizeof(t_token));
     if (!new)
         return;
-    new->value = strdup(value);
-    new->type = strdup(type);
+    new->value = ft_strdup(value);
+    new->type = ft_strdup(type);
     new->next = NULL;
 
     if (!*token)
@@ -158,7 +158,7 @@ char **split_line(char *line, char **array)
             if (!array[j])
                 error("malloc failed", line, array);
 
-            strncpy(array[j], &line[i], word_len);
+            strncpy(array[j], &line[i], word_len); //code ft_strncpy
             array[j][word_len] = '\0';
             j++;
             i += word_len;
@@ -171,10 +171,10 @@ char **split_line(char *line, char **array)
 
 int check_command(char *word)
 {
-    if (strcmp(word, "echo") == 0 || strcmp(word, "cd") == 0 ||
-        strcmp(word, "pwd") == 0 || strcmp(word, "export") == 0 ||
-        strcmp(word, "unset") == 0 || strcmp(word, "env") == 0 ||
-        strcmp(word, "exit") == 0)
+    if (ft_strcmp(word, "echo") == 0 || ft_strcmp(word, "cd") == 0 ||
+        ft_strcmp(word, "pwd") == 0 || ft_strcmp(word, "export") == 0 ||
+        ft_strcmp(word, "unset") == 0 || ft_strcmp(word, "env") == 0 ||
+        ft_strcmp(word, "exit") == 0)
         return (1);
     return (0);
 }
@@ -254,3 +254,17 @@ int     main(int argc, char *argv[])
     free(read); //ig?
     return (0);
 }
+
+//main without readline or add_history
+// int     main(int argc, char *argv[])
+// {
+//     char    *read;
+//     t_token     *token;
+
+//     token = NULL;
+//     (void)argc;
+//     read = strdup(argv[1]);
+//     tokenizer(read, &token);
+//     print_tokens(token);
+//     return (0);
+// }
