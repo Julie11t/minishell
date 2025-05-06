@@ -36,9 +36,11 @@ void create_token(t_token **token, char *value, char *type)
     }
 }
 
-void error(char *str, char *line, char **array)
+//free everything and exit
+void error(char *str, char *line, char **array, t_token *token)
 {
     int i;
+    t_token *temp;
 
     i = 0;
     if (line)
@@ -52,11 +54,20 @@ void error(char *str, char *line, char **array)
         }
         free(array);
     }
+    while (token)
+    {
+        temp = token;
+        token = token->next;
+        free(temp->value);
+        free(temp->type);
+        free(temp);
+    }
     printf("%s", str);
     exit(1);
 }
 
-int count_words(char *line)
+//count the number of words for malloc
+int count_words(char *line, t_token *token)
 {
     int i;
     int words;
@@ -65,7 +76,7 @@ int count_words(char *line)
     while (isspace(line[i]))
         i++;
     if (!line[i])
-        error("empty line\n", line, NULL);
+        error("empty line\n", line, NULL, token);
     words = 1;
     while (line[i])
     {
@@ -84,8 +95,9 @@ int count_words(char *line)
     }
     return (words);
 }
+
 //checks if the quotes are correct
-void handle_quotes(char *line)
+void     handle_quotes(char *line, t_token *token) //26 lines
 {
     int i;
     char flag;
@@ -112,7 +124,7 @@ void handle_quotes(char *line)
         i++;
     }
     if (flag != 1)
-        error("Command not found\n", line, NULL);
+        error("Command not found\n", line, NULL, token);
 }
 
 int count_current_word(char *line, int i)
@@ -127,9 +139,11 @@ int count_current_word(char *line, int i)
     }
     return (count);
 }
+
 int quotes_handler(char *line, int i)
 {
     char quote;
+
     quote = line[i];
     i++;
     while (line[i])
@@ -137,14 +151,14 @@ int quotes_handler(char *line, int i)
         if (line[i] == '\\' && line[i + 1])
             i += 2;
         else if (line[i] == quote)
-            return i + 1; // include closing quote
+            return i + 1;
         else
             i++;
     }
-    return i;
+    return (i);
 }
-
-char **split_line(char *line, char **array) //norm (27 lines)
+//splits the line based on spaces and quotes to a 2D array
+char    **split_line(char *line, char **array, t_token *token) //norm !!!!!!!!!!!!!!!
 {
     int i = 0;
     int j = 0;
@@ -164,7 +178,7 @@ char **split_line(char *line, char **array) //norm (27 lines)
             int word_len = i - start;
             array[j] = malloc(word_len + 1);
             if (!array[j])
-                error("malloc failed", line, array);
+                error("malloc failed", line, array, token);
             strncpy(array[j], &line[start], word_len);
             array[j][word_len] = '\0';
             j++;
@@ -175,6 +189,7 @@ char **split_line(char *line, char **array) //norm (27 lines)
     return (array);
 }
 
+//norm :)
 int check_command(char *word)
 {
     if (ft_strcmp(word, "echo") == 0 || ft_strcmp(word, "cd") == 0 ||
@@ -185,6 +200,7 @@ int check_command(char *word)
     return (0);
 }
 
+//identify each token's value
 void tokenize(char **array, t_token **token)
 {
     int i;
@@ -210,6 +226,7 @@ void tokenize(char **array, t_token **token)
     }
 }
 
+//main tokenizer (line -> 2D array -> linked list of tokens)
 void tokenizer(char *line, t_token **token)
 {
     char **array;
@@ -218,15 +235,15 @@ void tokenizer(char *line, t_token **token)
 
     words = 0;
     i = 0;
-    handle_quotes(line);
-    words = count_words(line);
+    handle_quotes(line, *token);
+    words = count_words(line, *token);
     array = malloc(sizeof(char *) * (words + 1));
     if (!array)
     {
         free(line);
         exit(1);
     }
-    array = split_line(line, array);
+    array = split_line(line, array, *token);
     tokenize(array, token);
     while (array[i])
     {
@@ -236,26 +253,34 @@ void tokenizer(char *line, t_token **token)
     free(array);
 }
 
+//for testing
 void print_tokens(t_token *token)
 {
+    t_token *temp;
+
     while (token)
     {
         printf("type: %s value: %s\n", token->type, token->value);
+        temp = token;
         token = token->next;
+        free(temp->value);
+        free(temp->type);
+        free(temp);
     }
 }
 
-int     main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-    char    *read;
-    t_token     *token;
+    char *line;
+    t_token *token;
 
     token = NULL;
     (void)argc;
     (void)argv;
-    read = readline("minishell > ");
-    add_history(read);
-    tokenizer(read, &token);
+    line = readline("minishell > "); //I think readline cause extra memory leaks idk how to handle them
+    add_history(line);
+    tokenizer(line, &token);
     print_tokens(token);
+    free(line);
     return (0);
 }
