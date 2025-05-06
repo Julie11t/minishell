@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <readline/readline.h>
-#include <readline/history.h>  
+#include <readline/history.h> 
 #include "libft/libft.h"
 
 typedef struct s_token
@@ -65,7 +65,7 @@ int count_words(char *line)
     while (isspace(line[i]))
         i++;
     if (!line[i])
-        error("Command not found", line, NULL); // handle empty line right here!
+        error("empty line\n", line, NULL);
     words = 1;
     while (line[i])
     {
@@ -84,8 +84,8 @@ int count_words(char *line)
     }
     return (words);
 }
-
-void handle_quotes(char *line) //norm (26 lines)
+//checks if the quotes are correct
+void handle_quotes(char *line)
 {
     int i;
     char flag;
@@ -112,7 +112,7 @@ void handle_quotes(char *line) //norm (26 lines)
         i++;
     }
     if (flag != 1)
-        error("Command not found", line, NULL);
+        error("Command not found\n", line, NULL);
 }
 
 int count_current_word(char *line, int i)
@@ -127,21 +127,24 @@ int count_current_word(char *line, int i)
     }
     return (count);
 }
-
 int quotes_handler(char *line, int i)
 {
+    char quote;
+    quote = line[i];
+    i++;
     while (line[i])
     {
-        if (line[i] == '\'' || line[i] == '\"')
-            return (++i);
-        if (line[i] == '\\')
+        if (line[i] == '\\' && line[i + 1])
+            i += 2;
+        else if (line[i] == quote)
+            return i + 1; // include closing quote
+        else
             i++;
-        i++;
     }
-    return (0);
+    return i;
 }
 
-char **split_line(char *line, char **array)
+char **split_line(char *line, char **array) //norm (27 lines)
 {
     int i = 0;
     int j = 0;
@@ -150,18 +153,21 @@ char **split_line(char *line, char **array)
     {
         if (!isspace(line[i]))
         {
+            int start = i;
             if (line[i] == '\"' || line[i] == '\'')
                 i = quotes_handler(line, i);
-
-            int word_len = count_current_word(line, i);
+            else
+            {
+                int word_len = count_current_word(line, i);
+                i += word_len;
+            }
+            int word_len = i - start;
             array[j] = malloc(word_len + 1);
             if (!array[j])
                 error("malloc failed", line, array);
-
-            strncpy(array[j], &line[i], word_len); //code ft_strncpy
+            strncpy(array[j], &line[start], word_len);
             array[j][word_len] = '\0';
             j++;
-            i += word_len;
         }
         i++;
     }
@@ -251,20 +257,5 @@ int     main(int argc, char *argv[])
     add_history(read);
     tokenizer(read, &token);
     print_tokens(token);
-    free(read); //ig?
     return (0);
 }
-
-//main without readline or add_history
-// int     main(int argc, char *argv[])
-// {
-//     char    *read;
-//     t_token     *token;
-
-//     token = NULL;
-//     (void)argc;
-//     read = strdup(argv[1]);
-//     tokenizer(read, &token);
-//     print_tokens(token);
-//     return (0);
-// }
