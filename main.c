@@ -220,6 +220,9 @@ void tokenize(char **array, t_token **token)
             create_token(token, array[++i], "append output");
         else if (strcmp(array[i], "<<") == 0)
             create_token(token, array[++i], "here-document");
+        else if (ft_strcmp(array[i], "grep") == 0 || ft_strcmp(array[i], "cat") == 0 ||
+                ft_strcmp(array[i], "ls") == 0 || ft_strcmp(array[i], "find") == 0)
+            create_token(token, array[i], "command");
         else
             create_token(token, array[i], "word");
         i++;
