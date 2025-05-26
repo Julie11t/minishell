@@ -61,5 +61,6 @@ void	handle_cd_command(char *path, int arg_count);
 void    init_shell(void);                   // Assumed to be implemented
 int     is_shell_builtin(const char *cmd);  // Assumed to be implemented
 void    system_handler(char *input);        // Assumed to be implemented
+char    **expand(char **args);
 
 #endif // MINISHELL_H

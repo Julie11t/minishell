@@ -69,36 +69,29 @@ void	count_quotes(const char *input, int *singleq, int *doubleq)
 	}
 }
 // Splits the input line into arguments while respecting quotes and escape characters.
-char	**parse_arguments(const char *input, int *arg_count, int *quote_error)
+char **parse_arguments(const char *input, int *arg_count, int *quote_error)
 {
-	static char	*argv[64];
-	char		buffer[1024];
-	int			in_single_quote;
-	int			in_double_quote;
-	int			k;
-	int			j;
-	int			i;
-	char		c;
+	static char *argv[64];
+	char buffer[1024];
+	int in_single_quote = 0;
+	int in_double_quote = 0;
+	int i = 0, j = 0, k = 0;
+	char c;
 
-	i = 0;
-	j = 0;
-	k = 0;
-	in_single_quote = 0;
-	in_double_quote = 0;
 	while (input[i])
 	{
 		c = input[i];
 		if (c == '\'' && !in_double_quote)
 		{
 			in_single_quote = !in_single_quote;
-			i++;
-			continue ;
+			buffer[j++] = input[i++];
+			continue;
 		}
 		if (c == '"' && !in_single_quote)
 		{
 			in_double_quote = !in_double_quote;
-			i++;
-			continue ;
+			buffer[j++] = input[i++];
+			continue;
 		}
 		if (!in_single_quote && !in_double_quote && (c == ' ' || c == '\t'))
 		{
@@ -109,17 +102,15 @@ char	**parse_arguments(const char *input, int *arg_count, int *quote_error)
 				j = 0;
 			}
 			i++;
-			continue ;
+			continue;
 		}
 		if (c == '\\' && input[i + 1])
 		{
-			if(input[i] == '\\')
-				i++;
-			buffer[j++] = input[i++];
-			continue ;
+			buffer[j++] = input[++i];
+			i++;
+			continue;
 		}
-		buffer[j++] = c;
-		i++;
+		buffer[j++] = input[i++];
 	}
 	if (j > 0)
 	{
@@ -129,7 +120,7 @@ char	**parse_arguments(const char *input, int *arg_count, int *quote_error)
 	argv[k] = NULL;
 	*arg_count = k;
 	*quote_error = in_single_quote || in_double_quote;
-	return (argv);
+	return argv;
 }
 
 // void print_tokens(t_token *token)
@@ -146,6 +137,20 @@ char	**parse_arguments(const char *input, int *arg_count, int *quote_error)
 //         free(temp);
 //     }
 // }
+
+// void print_argv(char **argv)
+// {
+//     int i = 0;
+
+//     printf("Arguments:\n");
+//     while (argv[i])
+//     {
+//         printf("[%d]: %s\n", i, argv[i]);
+//         i++;
+//     }
+// }
+
+
 // Runs the main shell loop that reads user input, parses it, and executes commands.
 void	shell_loop(char **envp)
 {
@@ -171,6 +176,7 @@ void	shell_loop(char **envp)
 		}
 		count_quotes(input, &singleq, &doubleq);
 		args = parse_arguments(input, &arg_count, &quote_error);
+		//print_argv(args);
 		if (quote_error)
 		{
 			printf("Unmatched quote detected!\n");
@@ -180,6 +186,7 @@ void	shell_loop(char **envp)
 			continue ;
 		if (check_syntax_error(args))
     		continue;
+		args = expand(args);
 		tokenize(args, &token);
 		handle_command(input, args, arg_count, envp, token);
 	}
