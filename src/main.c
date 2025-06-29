@@ -6,7 +6,7 @@
 /*   By: mhasoneh <mhasoneh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/26 17:20:35 by mhasoneh          #+#    #+#             */
-/*   Updated: 2025/05/27 16:59:44 by mhasoneh         ###   ########.fr       */
+/*   Updated: 2025/06/29 14:42:13 by mhasoneh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,11 +91,12 @@ void	nully(t_parse_state *s)
 
 // Splits the input line into arguments
 // while respecting quotes and escape characters.
-char	**parse_arguments(const char *input, int *arg_count, int *quote_error)
+char	**parse_arguments(const char *input, int *arg_count)
 {
 	t_parse_state	s;
 	static char		*argv[MAX_ARGS];
 	char			buffer[BUFFER_SIZE];
+	char	next;
 
 	nully(&s);
 	while (input[s.i])
@@ -157,34 +158,15 @@ char	**parse_arguments(const char *input, int *arg_count, int *quote_error)
 	}
 	argv[s.k] = NULL;
 	*arg_count = s.k;
-	*quote_error = s.in_single_quote || s.in_double_quote;
 	return (argv);
 }
 
-// void print_tokens(t_token *token)
-// {
-//     t_token *temp;
-
-//     while (token)
-//     {
-//         printf("type: %s value: %s\n", token->type, token->value);
-//         temp = token;
-//         token = token->next;
-//         free(temp->value);
-//         free(temp->type);
-//         free(temp);
-//     }
-// }
-// Runs the main shell loop that reads user input,
-// parses it, and executes commands.
 void	shell_loop(char **envp, int arg_count)
 {
 	char		*input;
 	char		**args;
-	int			quote_error;
 	t_token		*token;
 
-	quote_error = 0;
 	while (1)
 	{
 		token = NULL;
@@ -196,13 +178,7 @@ void	shell_loop(char **envp, int arg_count)
 			free(input);
 			continue ;
 		}
-		args = parse_arguments(input, &arg_count, &quote_error);
-		if (quote_error)
-		{
-			printf("Unmatched quote detected!\n");
-			free(input);
-			continue ;
-		}
+		args = parse_arguments(input, &arg_count);
 		args = expand(args);
 		tokenize(args, &token);
 		handle_command(input, args, arg_count, envp, token);
